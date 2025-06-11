@@ -248,11 +248,12 @@
             background: linear-gradient(135deg, #0a4d68 0%, #1a5f7a 100%);
             display: none;
             flex-direction: column;
-            justify-content: center;
+            justify-content: flex-start;
             align-items: center;
             z-index: 4000;
             text-align: center;
-            padding: 20px;
+            padding: 40px 20px;
+            overflow-y: auto;
         }
 
         .final-screen h2 {
@@ -514,6 +515,24 @@
         function checkAnswer() {
             const userAnswer = document.getElementById('answer').value.trim().toLowerCase();
             const correctAnswer = questions[currentQuestionIndex].answer.toLowerCase();
+            
+            // Cheat mode - empty answer is accepted
+            if (userAnswer === '') {
+                score += scorePerQuestion;
+                document.getElementById('score').textContent = Math.floor(score).toLocaleString();
+                
+                closePopup();
+                showCelebration();
+                
+                setTimeout(() => {
+                    if (currentQuestionIndex < questions.length - 1) {
+                        navigateToNext();
+                    } else {
+                        showFinalScreen();
+                    }
+                }, 2000);
+                return;
+            }
             
             // Check if answer is correct (either exact match or contains at least one word from the correct answer)
             const correctWords = correctAnswer.split(' ').filter(word => word.length > 2); // Skip small words like "the"
