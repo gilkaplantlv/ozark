@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>משחק יום הולדת - Ozark Edition</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #0a4d68 0%, #1a5f7a 50%, #2a7f9a 100%);
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            padding-top: 80px;
+            background: linear-gradient(180deg, rgba(10,77,104,0.9) 0%, rgba(26,95,122,0.7) 100%);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #b8e6ff;
+            text-shadow: 0 0 20px #5ac8fa;
+            margin-bottom: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.9; }
+            50% { opacity: 1; }
+        }
+
+        .intro {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.15em;
+            line-height: 1.8;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .score-display {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(184, 230, 255, 0.2);
+            border: 2px solid #b8e6ff;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            z-index: 1000;
+            box-shadow: 0 0 15px rgba(184, 230, 255, 0.5);
+        }
+
+        .map-container {
+            position: relative;
+            width: 100%;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 10px;
+        }
+
+        .map-container img {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+            border: 3px solid #5ac8fa;
+        }
+
+        .marker {
+            position: absolute;
+            width: 45px;
+            height: 45px;
+            background: radial-gradient(circle, #ffd700 0%, #ff8c00 50%, transparent 70%);
+            border-radius: 50%;
+            cursor: pointer;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            animation: markerPulse 2s infinite;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+            display: none;
+            z-index: 600;
+        }
+
+        .marker.active {
+            display: block;
+        }
+
+        .marker:hover {
+            transform: translate(-50%, -50%) scale(1.2);
+        }
+
+        @keyframes markerPulse {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+            }
+            50% { 
+                box-shadow: 0 0 0 25px rgba(255, 215, 0, 0);
+            }
+        }
+
+        .popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #1a5f7a 0%, #2a7f9a 100%);
+            border: 3px solid #b8e6ff;
+            border-radius: 20px;
+            padding: 35px;
+            padding-top: 45px;
+            max-width: 90%;
+            width: 450px;
+            box-shadow: 0 0 50px rgba(184, 230, 255, 0.6);
+            z-index: 2000;
+            display: none;
+        }
+
+        .popup h3 {
+            color: #ffd700;
+            margin-bottom: 25px;
+            font-size: 1.4em;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .popup input {
+            width: 100%;
+            padding: 15px;
+            margin: 20px 0;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid #b8e6ff;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1.1em;
+        }
+
+        .popup input::placeholder {
+            color: rgba(255,255,255,0.6);
+        }
+
+        .popup button {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            color: #0a4d68;
+            border: none;
+            padding: 12px 25px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .popup button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.9em;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .boat {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            z-index: 500;
+            transform: translate(-50%, -50%);
+            transition: all 2s linear;
+            pointer-events: none;
+        }
+
+        .boat svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4em;
+            display: none;
+            z-index: 3000;
+            animation: celebrate 2s ease-out;
+        }
+
+        @keyframes celebrate {
+            0% { 
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.5) rotate(180deg);
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .final-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a4d68 0%, #1a5f7a 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .final-screen h2 {
+            font-size: 3em;
+            color: #ffd700;
+            margin-bottom: 30px;
+            text-shadow: 0 0 30px #ffd700;
+        }
+
+        .final-score {
+            font-size: 4em;
+            color: #b8e6ff;
+            margin: 20px 0;
+            animation: finalPulse 1s infinite;
+            text-shadow: 0 0 20px #5ac8fa;
+        }
+
+        @keyframes finalPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .prize-message {
+            font-size: 1.6em;
+            color: #ffd700;
+            margin-top: 30px;
+            padding: 25px;
+            border: 3px solid #ffd700;
+            border-radius: 15px;
+            background: rgba(255, 215, 0, 0.15);
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .error-feedback {
+            color: #ff6b6b;
+            margin-top: 10px;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding-top: 70px;
+            }
+            .header h1 {
+                font-size: 1.8em;
+            }
+            .intro {
+                font-size: 1em;
+                padding: 15px;
+            }
+            .marker {
+                width: 35px;
+                height: 35px;
+            }
+            .popup {
+                padding: 25px;
+                padding-top: 35px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎭 האתגר האחרון במסע הסדרות 🎭</h1>
+    </div>
+
+    <div class="intro">
+        הגעת לתחנה האחרונה במסע שלנו בעולם הסדרות האהובות!<br>
+        כמו שהגיבורים שלנו נאלצו לעבור מסע מפרך כדי להגיע לחופש ולעושר,<br>
+        גם את צריכה לעבור אתגר אחרון כדי לגלות את המתנה שמחכה לך.<br>
+        הם הלבינו כסף והפכו אותו לאוצר, ואת?<br>
+        את תצטרכי להוכיח את הידע שלך ולצבור נקודות כדי לזכות בפרס! 💎
+    </div>
+
+    <div class="score-display">
+        נקודות: <span id="score">0</span>
+    </div>
+
+    <div class="map-container">
+        <img src="images/ozark.jpg" alt="Ozark Map" id="map">
+        <div class="boat" id="boat">
+            <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="256" cy="256" r="256" fill="#6b6fac"/>
+                <path d="M105.6 269.7h300.8l-23.1 29.3H128.7z" fill="#dea07e"/>
+                <path d="M307.5 225.6l-29.2 44.1h105.1l21.4-44.1H307.5z" fill="#b5d9f5"/>
+                <path d="M224.8 182.4h135.1l44.9 43.2H307.5l-15.5 44.1h-68.8z" fill="#e8c49c"/>
+                <path d="M271.3 134.5H242l-17.2 47.9 46.8 43.2h21.6l-9.9-28.7z" fill="#e8c49c"/>
+                <path d="M242 134.5l-22 30.5 4.8 17.4 17.2-47.9z" fill="#dea07e"/>
+                <path d="M224.8 182.4L123.5 269.7h101.3l68.8-.8 15.5-43.3h-36.6z" fill="#f5d1a3"/>
+                <path d="M24 345.9V232.4c0-13.3 10.8-24.1 24.1-24.1h51.8c13.3 0 24.1 10.8 24.1 24.1l5.5 37.3H24v76.2z" fill="#6b6fac"/>
+                <path d="M39.7 223.9h68.8V269.7H39.7z" fill="#dea07e"/>
+                <path d="M129.6 269.7H24.1v76.2h362.7c0-27.8-95.8-52.5-192.7-76.2H129.6z" fill="#ffb3b5"/>
+                <path d="M488 265.7h-7.8c-3.3 0-6 2.7-6 6s2.7 6 6 6H488c3.3 0 6-2.7 6-6s-2.7-6-6-6z" fill="#6b6fac"/>
+                <path d="M406.8 263.7H277.9l13.1-38H404.8l19.1 39.4a42.2 42.2 0 0 1-17.1-1.4z" fill="#8cc5e7"/>
+                <path d="M39.7 269.7h383.2L488 299a91.1 91.1 0 0 1-101.2 76.9H48.1c-13.3 0-24.1-10.8-24.1-24.1V269.7h15.7z" fill="#e7ecf6"/>
+                <path d="M24 307.5h416.5c-16 30.6-44.1 54.4-81 64.9-5.4 1.5-11 2.7-16.7 3.5H48.1c-13.3 0-24.1-10.8-24.1-24.1v-44.3z" fill="#d3dde9"/>
+                <path d="M104.1 307.5l282.7-1.4c-10.6 23.8-33.3 62-116.5 69.8H48.1c-13.3 0-24.1-10.8-24.1-24.1v-44.3h80.1z" fill="#adbccf"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="popup" id="popup">
+        <div class="close-btn" onclick="closePopup()">×</div>
+        <h3 id="question"></h3>
+        <input type="text" id="answer" placeholder="הכניסי את התשובה כאן...">
+        <div class="error-feedback" id="error" style="display: none;"></div>
+        <div>
+            <button onclick="showHint()">קבלי רמז 💡</button>
+            <button onclick="checkAnswer()">שלחי תשובה ✓</button>
+        </div>
+    </div>
+
+    <div class="celebration" id="celebration">💵</div>
+
+    <div class="final-screen" id="finalScreen">
+        <h2>כל הכבוד! 🎊</h2>
+        <div class="final-score">12,061,988 נקודות!</div>
+        <div class="prize-message">
+            💎 בדיוק כמו שמרטי בירד הלבין כסף והפך אותו ליהלומים נוצצים,<br>
+            גם את הצלחת במשימה והרווחת זוג עגילי יהלום מדהימים! 💎<br><br>
+            מי אמר שפשע לא משתלם? 😉<br>
+            (רק אל תספרי לאף אחד מאיפה הם הגיעו...)
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "What's the name of the casino boat used for money laundering across multiple seasons?",
+                hint: "Where money flows, legality floats, and everything happens on water.",
+                answer: "The Missouri Belle",
+                coordinates: {x: 100, y: 725}
+            },
+            {
+                question: "What's the last name of the local criminal family?",
+                hint: "Backwoods clan with guns, grudges, and fierce loyalty.",
+                answer: "Langmore",
+                coordinates: {x: 472, y: 754}
+            },
+            {
+                question: "Which cartel does Marty work for?",
+                hint: "Mexico, danger, and very clean money.",
+                answer: "Navarro",
+                coordinates: {x: 1093, y: 474}
+            },
+            {
+                question: "Who is responsible for Ben's death?",
+                hint: "She's a sister—but not always a merciful one.",
+                answer: "Wendy",
+                coordinates: {x: 1048, y: 214}
+            },
+            {
+                question: "Which character becomes Ruth's business partner later on?",
+                hint: "Ben wouldn't approve, but he's no longer around.",
+                answer: "Rachel",
+                coordinates: {x: 565, y: 329}
+            },
+            {
+                question: "What's the name of the public foundation Wendy launches?",
+                hint: "Social branding for a criminal smokescreen.",
+                answer: "Missouri Foundation for a Better Tomorrow",
+                coordinates: {x: 400, y: 437}
+            },
+            {
+                question: "What's the first business Marty buys when he arrives in the Ozarks?",
+                hint: "Full of tourists, water—and trouble.",
+                answer: "The Blue Cat Lodge",
+                coordinates: {x: 111, y: 334}
+            },
+            {
+                question: "What's the name of Wendy's brother?",
+                hint: "Sensitive, sincere, and not built for this world.",
+                answer: "Ben",
+                coordinates: {x: 743, y: 124}
+            },
+            {
+                question: "What's the name of the FBI agent in Season 1?",
+                hint: "Obsessive with a taste for risk.",
+                answer: "Roy Petty",
+                coordinates: {x: 363, y: 65}
+            },
+            {
+                question: "Who kills Helen at the end of Season 3?",
+                hint: "The cartel's cold-blooded right hand.",
+                answer: "Nelson",
+                coordinates: {x: 55, y: 116}
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let markers = [];
+
+        const scorePerQuestion = 12061988 / questions.length;
+
+        function initializeGame() {
+            createAllMarkers();
+            // Show only the first marker and position boat there
+            if (markers.length > 0) {
+                markers[0].classList.add('active');
+                positionBoatAtMarker(0);
+            }
+        }
+
+        function positionBoatAtMarker(index) {
+            const marker = markers[index];
+            const boat = document.getElementById('boat');
+            
+            // Calculate percentage positions
+            const xPercent = (questions[index].coordinates.x / 1200) * 100;
+            const yPercent = ((questions[index].coordinates.y - 60) / 800) * 100; // -60 to position above marker
+            
+            boat.style.left = xPercent + '%';
+            boat.style.top = yPercent + '%';
+        }
+
+        function createAllMarkers() {
+            const mapContainer = document.querySelector('.map-container');
+            
+            questions.forEach((q, index) => {
+                const marker = document.createElement('div');
+                marker.className = 'marker';
+                marker.dataset.index = index;
+                
+                // Calculate percentage positions
+                const xPercent = (q.coordinates.x / 1200) * 100;
+                const yPercent = (q.coordinates.y / 800) * 100;
+                
+                marker.style.left = xPercent + '%';
+                marker.style.top = yPercent + '%';
+                
+                marker.onclick = () => openQuestion(index);
+                mapContainer.appendChild(marker);
+                markers.push(marker);
+            });
+        }
+
+        function openQuestion(index) {
+            if (index !== currentQuestionIndex) return;
+            
+            const question = questions[index];
+            
+            document.getElementById('question').textContent = question.question;
+            document.getElementById('answer').value = '';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('popup').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        function showHint() {
+            alert('רמז: ' + questions[currentQuestionIndex].hint);
+        }
+
+        function checkAnswer() {
+            const userAnswer = document.getElementById('answer').value.trim().toLowerCase();
+            const correctAnswer = questions[currentQuestionIndex].answer.toLowerCase();
+            
+            // Check if answer is correct (either exact match or contains at least one word from the correct answer)
+            const correctWords = correctAnswer.split(' ').filter(word => word.length > 2); // Skip small words like "the"
+            const userWords = userAnswer.split(' ');
+            
+            const isCorrect = userAnswer === correctAnswer || 
+                             correctWords.some(word => userWords.some(userWord => userWord === word));
+            
+            if (isCorrect) {
+                score += scorePerQuestion;
+                document.getElementById('score').textContent = Math.floor(score).toLocaleString();
+                
+                closePopup();
+                showCelebration();
+                
+                setTimeout(() => {
+                    if (currentQuestionIndex < questions.length - 1) {
+                        navigateToNext();
+                    } else {
+                        showFinalScreen();
+                    }
+                }, 2000);
+            } else {
+                document.getElementById('error').textContent = 'תשובה לא נכונה, נסי שוב! 🔄';
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+
+        function showCelebration() {
+            const celebration = document.getElementById('celebration');
+            celebration.style.display = 'block';
+            
+            setTimeout(() => {
+                celebration.style.display = 'none';
+            }, 2000);
+        }
+
+        function navigateToNext() {
+            const nextIndex = currentQuestionIndex + 1;
+            const boat = document.getElementById('boat');
+            
+            // Calculate next position (above the marker)
+            const xPercent = (questions[nextIndex].coordinates.x / 1200) * 100;
+            const yPercent = ((questions[nextIndex].coordinates.y - 60) / 800) * 100; // -60 to position above marker
+            
+            // Animate boat to next position (linear movement)
+            boat.style.left = xPercent + '%';
+            boat.style.top = yPercent + '%';
+            
+            setTimeout(() => {
+                // Hide current marker and show next
+                markers[currentQuestionIndex].classList.remove('active');
+                markers[nextIndex].classList.add('active');
+                currentQuestionIndex++;
+            }, 2000);
+        }
+
+        function showFinalScreen() {
+            document.getElementById('score').textContent = '12,061,988';
+            document.getElementById('finalScreen').style.display = 'flex';
+        }
+
+        // Handle Enter key in answer input
+        document.getElementById('answer').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkAnswer();
+            }
+        });
+
+        // Initialize game when page loads
+        window.onload = initializeGame;
+    </script>
+</body>
+</html>
